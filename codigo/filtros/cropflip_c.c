@@ -17,6 +17,8 @@ void cropflip_c    (
 	unsigned char (*dst_matrix)[dst_row_size] = (unsigned char (*)[dst_row_size]) dst;
 
 	// ejemplo de uso de src_matrix y dst_matrix (copia una parte de la imagen)
+	//ESTE ARCHIVO TIENE QUE ACTUALIZARSE. YA LO TENGO HECHO EN EL LABO. EMI
+
 
 	for (int i = 0; i < tamy; i++) {
 		for (int j = 0; j < tamx; j++) {

@@ -9,5 +9,16 @@ section .text
 ;                  int tamx, int tamy,
 ;                  int offsetx, int offsety);
 
+	;RDI = *src
+	;RSI = *dst
+	;RDX = columnas
+	;RCX = filas
+	;R8 = source row
+	;R9 = destination row
+	;Pila = tamx, tamy, offsetx, offsety
+	;
+	;Pila =/ |RBP|RET|TAMX|TAMY|OFFSETX|OFFSETY 
+	;
+
 cropflip_asm:
     ret
