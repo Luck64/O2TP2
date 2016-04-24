@@ -19,9 +19,33 @@ void sepia_c    (
         {
             bgra_t *p_d = (bgra_t*) &dst_matrix[i][j * 4];
             bgra_t *p_s = (bgra_t*) &src_matrix[i][j * 4];
-            *p_d = *p_s;
+   //         *p_d = *p_s;
+            int suma = p_s->b + p_s->g + p_s->r;
+            int b = 0.2*suma;
+            int g = 0.3*suma;
+            int r = 0.5*suma;
+
+            if(b>255){
+                b=255;
+            };
+
+            if(r>255){
+                r=255;
+            };
+
+            if(g>255){
+                g=255;
+            };
+
+            p_d->b = b;
+            p_d->g = g;
+            p_d->r = r;
+            p_d->a = p_s->a;
+
+
         }
     }	//COMPLETAR
 }
+
 
 
