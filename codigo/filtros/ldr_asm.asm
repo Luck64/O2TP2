@@ -41,11 +41,12 @@ ldr_asm:
 	xorp XMM0, XMM0
 	mov RBX, RCX
 	sub RBX, 5									; RBX = corrimiento en la imagen para tomar los 5 proximos pix vecinos
+
 .cicloVecinos:
 movdqu XMM10, XMM0						; XMM10 = Acum de la sumatoria de vecinos 
 CMP R11, 5										; Maximo de vecionos 4
 JE .siguiente
-.xmmFill:
+
 ;Obtenemos los primeros 5 pixeles sin su alpha
 xorps XMM0, XMM0							; XMM0 = 0
 PINSRB xmm0, [RDI + R10], 15	; [B1|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00]
@@ -84,6 +85,7 @@ PINSRB xmm0, [RDI + R10], 1		; [B1|G1|R1|B2|G2|R2|B3|G3|R3|B4|G4|R4|B5|G5|R5|00]
 ADD R10, 8										; CHAR SIZE ; A5
 ADD R10, 8										; CHAR SIZE ; B6
 
+;Copiamos en otros registros para sumar
 movdqu XMM0, XMM1
 movdqu XMM0, XMM2
 movdqu XMM0, XMM3
@@ -93,14 +95,14 @@ movdqu XMM0, XMM6
 
 ;Se ordenan los xmm para poder sumar
 															; [B1|G1|R1|B2|G2|R2|B3|G3|R3|B4|G4|R4|B5|G5|R5|00]
-PSLLDQ XMM1,3									; [B2|G2|R2|B3|G3|R3|B4|G4|R4|B5|G5|R5|**|**|**|**]
-PSLLDQ XMM2,6									; [B3|G3|R3|B4|G4|R4|B5|G5|R5|**|**|**|**|**|**|**]
-PSLLDQ XMM3,9									; [B4|G4|R4|B5|G5|R5|**|**|**|**|**|**|**|**|**|**]
-PSLLDQ XMM4,12								; [B5|G5|R5|**|**|**|**|**|**|**|**|**|**|**|**|**]
-PSRLDQ XMM5,3									; [**|**|**|B1|G1|R1|B2|G2|R2|B3|G3|R3|B4|G4|R4|B5]
-PSRLDQ XMM6,6									; [**|**|**|**|**|**|B1|G1|R1|B2|G2|R2|B3|G3|R3|B4]
+PSLLDQ XMM1,3									; [B2|G2|R2|B3|G3|R3|B4|G4|R4|B5|G5|R5|00|00|00|00]
+PSLLDQ XMM2,6									; [B3|G3|R3|B4|G4|R4|B5|G5|R5|00|00|00|00|00|00|00]
+PSLLDQ XMM3,9									; [B4|G4|R4|B5|G5|R5|00|00|00|00|00|00|00|00|00|00]
+PSLLDQ XMM4,12								; [B5|G5|R5|00|00|00|00|00|00|00|00|00|00|00|00|00]
+PSRLDQ XMM5,3									; [00|00|00|B1|G1|R1|B2|G2|R2|B3|G3|R3|B4|G4|R4|B5]
+PSRLDQ XMM6,6									; [00|00|00|00|00|00|B1|G1|R1|B2|G2|R2|B3|G3|R3|B4]
 
-
+;XXXX - REVISAR SI ESTA LIMPIEZA HACE FALTA
 pand XMM1, XMM15							; [B1|00|00|00|G2|00|00|00|R3|00|00|00|00|00|00|00]	
 pand XMM2, XMM15							; [B2|00|00|00|G3|00|00|00|R4|00|00|00|00|00|00|00]	
 pand XMM3, XMM15							; [B3|00|00|00|G4|00|00|00|R5|00|00|00|00|00|00|00]	
@@ -108,7 +110,7 @@ pand XMM4, XMM15							; [B4|00|00|00|G5|00|00|00|00|00|00|00|00|00|00|00]
 pand XMM5, XMM15							; [00|00|00|00|00|00|00|00|R2|00|00|00|00|00|00|00]	
 pand XMM6, XMM15							; [00|00|00|00|G1|00|00|00|R1|00|00|00|00|00|00|00]	
 
-
+;sumamos y acumulamos en XMM0
 padd XMM0,XMM1								; Suma sin saturacion
 padd XMM0,XMM2
 padd XMM0,XMM3
@@ -118,6 +120,8 @@ padd XMM0,XMM6								; [Sb|**|**|**|Sg|**|**|**|Sr|**|**|**|**|**|**|**]
 
 inc R11												; R11 ++ (itera en la cantidad de vecinos)
 ADD R10, RBX									; Sube una fila en la imagen
+JMP .cicloVecinos
+
 .siguiente:
 .desempaquetado:
 ;Pasar a float. ¿Se pasa solo agrandando los bytes o hay que configurarlo como float?
