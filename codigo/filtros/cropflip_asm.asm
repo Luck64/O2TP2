@@ -47,18 +47,21 @@ cropflip_asm:
 	xor r14, r14
 	xor r15, r15	
 
-	mov ebx, [rbp+12] ;ebx = tamx
-	mov r12d, [rbp+16] ; r12d = tamy
-	mov r13d, [rbp+20] ; r13d = offsetx
-	mov r14d, [rbp+24] ; r14d = offsety
+	mov ebx, [rbp+16] ;ebx = tamx
+	mov r12d, [rbp+24] ; r12d = tamy
+	mov r13d, [rbp+32] ; r13d = offsetx
+	mov r14d, [rbp+40] ; r14d = offsety
 
 	;primero tengo que posicionar el puntero a (offsetx,offsety), luego ponerlo en la primera celda superior izquierda.
 	lea r15, [r12+r14]
+	dec r15
 	lea rdx, [rdx*4]
+	lea r13, [r13*4]
+	lea rbx, [rbx*4]
 	.primeraCeldaSupIzq:
 	cmp r8, r15
 	je .setOffsetX
-	add rdi, rdx ;rdx*4??
+	add rdi, rdx
 	inc r8
 	jmp .primeraCeldaSupIzq
 
@@ -80,9 +83,11 @@ cropflip_asm:
 	movdqu [rsi], xmm0		 ; XMM0 = [ B1 | G1 | R1 | A1 | B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 ]
 	lea rsi, [rsi + 16]
 	lea rdi, [rdi + 16]
-	add r9, 4
+	add r9, 16
+	;inc r9
 	cmp r9, rbx ; comparo para ver si ya termine esta fila (con tamx)
 	jge .cicloY
+	;je .cicloY
 	jmp .cicloX	
 
 	.fin:
