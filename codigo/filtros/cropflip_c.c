@@ -19,11 +19,16 @@ void cropflip_c    (
 	// ejemplo de uso de src_matrix y dst_matrix (copia una parte de la imagen)
 	//ESTE ARCHIVO TIENE QUE ACTUALIZARSE. YA LO TENGO HECHO EN EL LABO. EMI
 
+	//SEGMENTATION FAULT IF:
+	//(OFFSETY+TAMY>FILAS) : Se te acaban las filas
+	
+	//SE PUEDE ROMPER SI:
+	//(OFFSETX + TAMX > COLUMNAS) : "se te acaban las columnas" o bien empieza a copiar de otras.
 
 	for (int i = 0; i < tamy; i++) {
 		for (int j = 0; j < tamx; j++) {
 			bgra_t *p_d = (bgra_t*) &dst_matrix[i][j * 4];
-            bgra_t *p_s = (bgra_t*) &src_matrix[i][j * 4];
+            bgra_t *p_s = (bgra_t*) &src_matrix[tamy+offsety-i-1][offsetx + j * 4];
 
 			p_d->b = p_s->b;
 			p_d->g = p_s->g;
