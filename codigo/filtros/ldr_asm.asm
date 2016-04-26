@@ -2,7 +2,7 @@ global ldr_asm
 
 section .data
 section .rodata
-quitarBasura: db 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+quitarBasura: db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF
 
 section .text
 ;void ldr_asm    (
@@ -38,7 +38,7 @@ ldr_asm:
 	movdqu XMM15, [quitarBasura]
 	xor R10, R10								; R10 = corrimiento de memoria
 	xor R11, R11								; R11 = Ciclo para tomar los vecinos [0-4]  
-	xorp XMM0, XMM0
+	xorps xmm0, xmm0
 	mov RBX, RCX
 	sub RBX, 5									; RBX = corrimiento en la imagen para tomar los 5 proximos pix vecinos
 
@@ -86,12 +86,12 @@ ADD R10, 8										; CHAR SIZE ; A5
 ADD R10, 8										; CHAR SIZE ; B6
 
 ;Copiamos en otros registros para sumar
-movdqu XMM0, XMM1
-movdqu XMM0, XMM2
-movdqu XMM0, XMM3
-movdqu XMM0, XMM4
-movdqu XMM0, XMM5
-movdqu XMM0, XMM6
+movdqu XMM1, XMM0
+movdqu XMM2, XMM0
+movdqu XMM3, XMM0
+movdqu XMM4, XMM0
+movdqu XMM5, XMM0
+movdqu XMM6, XMM0
 
 ;Se ordenan los xmm para poder sumar
 															; [B1|G1|R1|B2|G2|R2|B3|G3|R3|B4|G4|R4|B5|G5|R5|00]
@@ -102,7 +102,7 @@ PSLLDQ XMM4,12								; [B5|G5|R5|00|00|00|00|00|00|00|00|00|00|00|00|00]
 PSRLDQ XMM5,3									; [00|00|00|B1|G1|R1|B2|G2|R2|B3|G3|R3|B4|G4|R4|B5]
 PSRLDQ XMM6,6									; [00|00|00|00|00|00|B1|G1|R1|B2|G2|R2|B3|G3|R3|B4]
 
-;XXXX - REVISAR SI ESTA LIMPIEZA HACE FALTA
+pand XMM0, XMM15
 pand XMM1, XMM15							; [B1|00|00|00|G2|00|00|00|R3|00|00|00|00|00|00|00]	
 pand XMM2, XMM15							; [B2|00|00|00|G3|00|00|00|R4|00|00|00|00|00|00|00]	
 pand XMM3, XMM15							; [B3|00|00|00|G4|00|00|00|R5|00|00|00|00|00|00|00]	
@@ -111,12 +111,12 @@ pand XMM5, XMM15							; [00|00|00|00|00|00|00|00|R2|00|00|00|00|00|00|00]
 pand XMM6, XMM15							; [00|00|00|00|G1|00|00|00|R1|00|00|00|00|00|00|00]	
 
 ;sumamos y acumulamos en XMM0
-padd XMM0,XMM1								; Suma sin saturacion
-padd XMM0,XMM2
-padd XMM0,XMM3
-padd XMM0,XMM4
-padd XMM0,XMM5
-padd XMM0,XMM6								; [Sb|**|**|**|Sg|**|**|**|Sr|**|**|**|**|**|**|**]
+paddd XMM0,XMM1								; Suma sin saturacion
+paddd XMM0,XMM2
+paddd XMM0,XMM3
+paddd XMM0,XMM4
+paddd XMM0,XMM5
+paddd XMM0,XMM6								; XMM0 = [Sb|**|**|**|Sg|**|**|**|Sr|**|**|**|**|**|**|**]
 
 inc R11												; R11 ++ (itera en la cantidad de vecinos)
 ADD R10, RBX									; Sube una fila en la imagen
