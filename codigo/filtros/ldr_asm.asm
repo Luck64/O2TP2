@@ -1,8 +1,14 @@
 global ldr_asm
 
+%define NULL				0
+%define PIXEL_SIZE	4
+
 section .data
 section .rodata
 quitarBasura: db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF
+;mascSuma1: db 0xFF, 0xFF, 0xFF, 0x06, 0xFF, 0x05, 0xFF, 0x04, 0xFF, 0xFF, 0XFF, 0X02, 0xFF, 0x01, 0xFF, 0x00
+;mascSuma2: dq 0xFF, 0xFF, 0xFF, 0x0E, 0xFF, 0x0D, 0xFF, 0x0C, 0xFF, 0xFF, 0XFF, 0X0A, 0xFF, 0x09, 0xFF, 0x08
+mascSuma2: db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0, 0X00, 0X00, 0x00, 0x00, 0x00, 0x00
 
 section .text
 ;void ldr_asm    (
@@ -35,119 +41,63 @@ ldr_asm:
 	push RBX				;Desalineada
 	push R12				;Alineada
 
-	movdqu XMM15, [quitarBasura]
-	xor R10, R10								; R10 = corrimiento de memoria
-	xor R11, R11								; R11 = Ciclo para tomar los vecinos [0-4]  
-	xorps xmm0, xmm0
-	mov RBX, RCX
-	sub RBX, 5									; RBX = corrimiento en la imagen para tomar los 5 proximos pix vecinos
+	xor r12, r12		; r12 = i0
+	movdqu xmm15, [quitarBasura]
 
-.cicloVecinos:
-movdqu XMM10, XMM0						; XMM10 = Acum de la sumatoria de vecinos 
-CMP R11, 5										; Maximo de vecionos 4
-JE .siguiente
+;|U|V|W|X|Y|				| | | | | | | | |
+;|P|Q|R|S|T|				| | | | | | | | |
+;|K|L|*|N|O|				| | |1|2|3|4| | |
+;|F|G|H|I|J|				| | | | | | | | |
+;|A|B|C|D|E|				| | | | | | | | |
+;										
+;XMM0 = A 
+;XMM0 = [    A1     |    A2     |    A3     |     A4    ]
+;XMM0 = [B1|G1|R1|a1|B2|G2|R2|a2|B3|G3|R3|a3|B4|G4|R4|a4]
+	movdqu xmm0, [rdi + PIXEL_SIZE*r12]	
+	inc r12
+;XMM1 = B
+;XMM1 = [    B1     |    B2     |    B3     |     B4    ]
+;XMM1 = [B2|G2|R2|a2|B3|G3|R3|a3|B4|G4|R4|a4|B5|G5|R5|a5]
+	movdqu xmm1, [rdi + PIXEL_SIZE*r12]
+	inc r12
+;XMM2 = C
+;XMM2 = [    C1     |    C2     |    C3     |     C4    ]
+;XMM2 = [B3|G3|R3|a3|B4|G4|R4|a4|B5|G5|R5|a5|B6|G6|R6|a6]
+	movdqu xmm2, [rdi + PIXEL_SIZE*r12]
+	inc r12
+;XMM3 = D
+;XMM3 = [    D1     |    D2     |    D3     |     D4    ]
+;XMM3 = [B4|G4|R4|a4|B5|G5|R5|a5|B6|G6|R6|a6|B7|G7|R7|a7]
+	movdqu xmm3, [rdi + PIXEL_SIZE*r12]
+	inc r12
+;XMM4 = E
+;XMM4 = [    E1     |    E2     |    E3     |     E4    ]
+;XMM4 = [B5|G5|R5|a5|B6|G6|R6|a6|B7|G7|R7|a7|B8|G8|R8|a8]
+	movdqu xmm4, [rdi + PIXEL_SIZE*r12]
 
-;Obtenemos los primeros 5 pixeles sin su alpha
-xorps XMM0, XMM0							; XMM0 = 0
-PINSRB xmm0, [RDI + R10], 15	; [B1|00|00|00|00|00|00|00|00|00|00|00|00|00|00|00]
-ADD R10, 8										; CHAR SIZE ; G1
-PINSRB xmm0, [RDI + R10], 14	; [B1|G1|00|00|00|00|00|00|00|00|00|00|00|00|00|00]
-ADD R10, 8										; CHAR SIZE ; R1
-PINSRB xmm0, [RDI + R10], 13	; [B1|G1|R1|00|00|00|00|00|00|00|00|00|00|00|00|00]
-ADD R10, 8										; CHAR SIZE ; A1
-ADD R10, 8										; CHAR SIZE ; B2
-PINSRB xmm0, [RDI + R10], 12	; [B1|G1|R1|B2|00|00|00|00|00|00|00|00|00|00|00|00]
-ADD R10, 8										; CHAR SIZE ; G2
-PINSRB xmm0, [RDI + R10], 11	; [B1|G1|R1|B2|G2|00|00|00|00|00|00|00|00|00|00|00]
-ADD R10, 8										; CHAR SIZE ; R2
-PINSRB xmm0, [RDI + R10], 10	; [B1|G1|R1|B2|G2|R2|00|00|00|00|00|00|00|00|00|00]
-ADD R10, 8										; CHAR SIZE ; A2
-ADD R10, 8										; CHAR SIZE ; B3
-PINSRB xmm0, [RDI + R10], 9		; [B1|G1|R1|B2|G2|R2|B3|00|00|00|00|00|00|00|00|00]
-ADD R10, 8										; CHAR SIZE ; G3
-PINSRB xmm0, [RDI + R10], 8		; [B1|G1|R1|B2|G2|R2|B3|G3|00|00|00|00|00|00|00|00]
-ADD R10, 8										; CHAR SIZE ; R3
-PINSRB xmm0, [RDI + R10], 7		; [B1|G1|R1|B2|G2|R2|B3|G3|R3|00|00|00|00|00|00|00]
-ADD R10, 8										; CHAR SIZE ; A3
-ADD R10, 8										; CHAR SIZE ; B4
-PINSRB xmm0, [RDI + R10], 6		; [B1|G1|R1|B2|G2|R2|B3|G3|R3|B4|00|00|00|00|00|00]
-ADD R10, 8										; CHAR SIZE ; G4
-PINSRB xmm0, [RDI + R10], 5		; [B1|G1|R1|B2|G2|R2|B3|G3|R3|B4|G4|00|00|00|00|00]
-ADD R10, 8										; CHAR SIZE ; R4
-PINSRB xmm0, [RDI + R10], 4		; [B1|G1|R1|B2|G2|R2|B3|G3|R3|B4|G4|R4|00|00|00|00]
-ADD R10, 8										; CHAR SIZE ; A4
-ADD R10, 8										; CHAR SIZE ; B5
-PINSRB xmm0, [RDI + R10], 3		; [B1|G1|R1|B2|G2|R2|B3|G3|R3|B4|G4|R4|B5|00|00|00]
-ADD R10, 8										; CHAR SIZE ; G5
-PINSRB xmm0, [RDI + R10], 2		; [B1|G1|R1|B2|G2|R2|B3|G3|R3|B4|G4|R4|B5|G5|00|00]	
-ADD R10, 8										; CHAR SIZE ; R5
-PINSRB xmm0, [RDI + R10], 1		; [B1|G1|R1|B2|G2|R2|B3|G3|R3|B4|G4|R4|B5|G5|R5|00]
-ADD R10, 8										; CHAR SIZE ; A5
-ADD R10, 8										; CHAR SIZE ; B6
+.suma:
+; XMM10 = [A1+B1+C1+D1+E1]
+; XMM11 = [A2+B2+C2+D2+E2]
+; XMM12 = [A3+B3+C3+D3+E3]
+; XMM13 = [A4+B4+C4+D4+E4]
 
-;Copiamos en otros registros para sumar
-movdqu XMM1, XMM0
-movdqu XMM2, XMM0
-movdqu XMM3, XMM0
-movdqu XMM4, XMM0
-movdqu XMM5, XMM0
-movdqu XMM6, XMM0
-
-;Se ordenan los xmm para poder sumar
-															; [B1|G1|R1|B2|G2|R2|B3|G3|R3|B4|G4|R4|B5|G5|R5|00]
-PSLLDQ XMM1,3									; [B2|G2|R2|B3|G3|R3|B4|G4|R4|B5|G5|R5|00|00|00|00]
-PSLLDQ XMM2,6									; [B3|G3|R3|B4|G4|R4|B5|G5|R5|00|00|00|00|00|00|00]
-PSLLDQ XMM3,9									; [B4|G4|R4|B5|G5|R5|00|00|00|00|00|00|00|00|00|00]
-PSLLDQ XMM4,12								; [B5|G5|R5|00|00|00|00|00|00|00|00|00|00|00|00|00]
-PSRLDQ XMM5,3									; [00|00|00|B1|G1|R1|B2|G2|R2|B3|G3|R3|B4|G4|R4|B5]
-PSRLDQ XMM6,6									; [00|00|00|00|00|00|B1|G1|R1|B2|G2|R2|B3|G3|R3|B4]
-
-pand XMM0, XMM15
-pand XMM1, XMM15							; [B1|00|00|00|G2|00|00|00|R3|00|00|00|00|00|00|00]	
-pand XMM2, XMM15							; [B2|00|00|00|G3|00|00|00|R4|00|00|00|00|00|00|00]	
-pand XMM3, XMM15							; [B3|00|00|00|G4|00|00|00|R5|00|00|00|00|00|00|00]	
-pand XMM4, XMM15							; [B4|00|00|00|G5|00|00|00|00|00|00|00|00|00|00|00]	
-pand XMM5, XMM15							; [00|00|00|00|00|00|00|00|R2|00|00|00|00|00|00|00]	
-pand XMM6, XMM15							; [00|00|00|00|G1|00|00|00|R1|00|00|00|00|00|00|00]	
-
-;sumamos y acumulamos en XMM0
-paddd XMM0,XMM1								; Suma sin saturacion
-paddd XMM0,XMM2
-paddd XMM0,XMM3
-paddd XMM0,XMM4
-paddd XMM0,XMM5
-paddd XMM0,XMM6								; XMM0 = [Sb|**|**|**|Sg|**|**|**|Sr|**|**|**|**|**|**|**]
-
-inc R11												; R11 ++ (itera en la cantidad de vecinos)
-ADD R10, RBX									; Sube una fila en la imagen
-JMP .cicloVecinos
-
-.siguiente:
-.desempaquetado:
-;Pasar a float. ¿Se pasa solo agrandando los bytes o hay que configurarlo como float?
-;AND with a mask to zero out the odd bytes (PAND)
-;Unpack from 16 bits to 32 bits (PUNPCKLWD with a zero vector)
-;Convert 32 bit ints to floats (CVTDQ2PS)
-
-;FLOAT 32bit
-;[0 | 0|1|1|1|1|1|0|0 | 0|1|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0] = 0.15625
-;sign | exponent(8b)   | fraction(23b)
-; +      (124-127 = -3) 
-;1.01 * 2⁻³
-;0.00101 = 2⁻³ + 2⁻⁵ = 0.15625
-
-;notacion: (m,e) = m * b^e
-; m = mantisa
-; b = base
-; e = exponente
-
-
-;1 ciclo para recorrer toda la matriz
-;1 ciclo para recorrer los pixeles vecinos
-
-.empaquetado:		
-
+	movdqu xmm10, xmm0
+	movdqu xmm5, xmm0
+	pshufb xmm10, xmm15
+	pshufb xmm5, [mascSuma2]	
+	
+	movdqu xmm11, xmm1
+	movdqu xmm6, xmm1
+	movdqu xmm12, xmm2
+	movdqu xmm7, xmm2
+	movdqu xmm13, xmm3
+	movdqu xmm8, xmm3
+	movdqu xmm14, xmm4
+	
+	
 .fin:
+	pop R12
+	pop RBX
 	pop RBP
 	ret
  
