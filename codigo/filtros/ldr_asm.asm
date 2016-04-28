@@ -44,8 +44,8 @@ ldr_asm:
 
 	xor r12, r12								; R12 = iterador de vecinos
 	xor r14, r14								; R14 = iterador de pixeles
-	add r14, cols
-	add r14, cols
+	;add r14, cols
+	;add r14, cols
 	add r14, 2									; R14 = 2*cols + 2 (inicio)
 	xor r13, r13
 	mov r13B, [RBP + 16]				;R13 = alpha
@@ -79,7 +79,7 @@ ldr_asm:
 ;XMM3 = [    D1     |    D2     |    D3     |     D4    ]
 ;XMM3 = [B4|G4|R4|a4|B5|G5|R5|a5|B6|G6|R6|a6|B7|G7|R7|a7]
 	movdqu xmm3, [rdi + PIXEL_SIZE*r12]
-	movdqu xmm13, amm3
+	movdqu xmm13, xmm3
 	inc r12
 ;XMM4 = E
 ;XMM4 = [    E1     |    E2     |    E3     |     E4    ]
