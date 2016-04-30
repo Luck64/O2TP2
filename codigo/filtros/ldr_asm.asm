@@ -14,7 +14,7 @@ dejarCuarto: db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 maximoConstante: dd 4876875.0, 4876875.0, 4876875.0, 0.0
 saturacion: db 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 mascPixel: db 0x00, 0xFF, 0xFF, 0xFF, 0x01, 0xFF, 0xFF, 0xFF, 0x02, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
-mascFloat: db 0X00, 0X01, 0x02, 0x03, 0X00, 0X01, 0x02, 0x03, 0X00, 0X01, 0x02, 0x03, 0XFF, 0xFF, 0xFF, 0XFF
+mascFloat: db 0x00, 0X01, 0x02, 0x03, 0X00, 0X01, 0x02, 0x03, 0X00, 0X01, 0x02, 0x03, 0XFF, 0xFF, 0xFF, 0XFF
 
 
 section .text
@@ -261,37 +261,23 @@ movdqu xmm6, [maximoConstante]
 ; XMM6 = MAX (ya es un float )
 
 ; los convierto en floats
-cvtdq2ps xmm0, xmm0 ; [SUMARGB|0|0|0]
-cvtdq2ps xmm2, xmm2 ; [   B   |G|R|0]
-cvtdq2ps xmm4, xmm4 ; [ Alpha |0|0|0]
 
-;acomodamos todos en tres DQ [XXXX|XXXX|XXXX|0000]
+;movdqu xmm15, [mascFloat]
+pshufd xmm0, 0x03	;[SUMARGB|SUMARGB|SUMARGB|0]
+pshufd xmm4, 0x03	;[ Alpha | Alpha | Alpha |0]
 
-movdqu xmm15, [mascFloat]
-pshufb xmm0, xmm15	;[SUMARGB|SUMARGB|SUMARGB|0]
-pshufb xmm4, xmm15	;[ Alpha | Alpha | Alpha |0]
+cvtdq2ps xmm0, xmm0 ; [SUMARGB|SUMARGB|SUMARGB|0] con floats
+cvtdq2ps xmm2, xmm2 ; [   B   |   G   |   R   |0]
+cvtdq2ps xmm4, xmm4 ; [ Alpha | Alpha | Alpha |0]
 
-mulps xmm0, xmm2 ; SUMABGR*Ikij  			-> [ S*I | S*I | S*I |0]
+mulps xmm0, xmm2 ; SUMABGR*Ikij       -> [ S*I | S*I | S*I |0]
 mulps xmm0, xmm4 ; SUMABGR*Ikij*ALPHA -> [S*I*A|S*I*A|S*I*A|0]
-;mulps xmm2, xmm6 ; Ikij*MAX						-> [B*Max|G*Max|R*Max|0]
 
-;addps xmm0, xmm2 ; Ikij*MAX + SUMABGR*Ikij*ALPHA			->	[(SIA)+(BM)|(SIA)+(GM)|(SIA)+(RM)|0]
+divps xmm0, xmm6 ; (SUMABGR*Ikij*ALPHA)/MAX	-> [SumaB/max|SumaG/Max|SumaR/Max|0/Max]
+addps xmm0, xmm2 ; Ikij + (SUMABGR*Ikij*ALPHA)/MAX -> [FINAL-B|FINAL-G|FINAL-R|0]
 
-divps xmm0, xmm6 ; (Ikij*MAX + SUMABGR*Ikij*ALPHA)/MAX	-> [SumaB/max|SumaG/Max|SumaR/Max|0/Max]
-addps xmm0, xmm2
-
-;cvtps2dq xmm0, xmm3 ;lo convierto en integer
 xorps xmm2, xmm2
 cvtps2dq xmm2, xmm0 ;lo convierto en integer
-
-;movdqu xmm15, [saturacion]
-;movdqu xmm8, xmm0
-;movdqu xmm8, xmm2
-;pcmpgtd xmm8, xmm15 ; xmm15 = saturacion
-;por xmm0, xmm8
-;por xmm2, xmm8
-
-; XMM0 = [RESULTADO|00|00|00]
 
 packusdw xmm2, xmm2
 packuswb xmm2, xmm2
