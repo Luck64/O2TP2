@@ -1,0 +1,9 @@
+#Tiempos de ejecución Sepia
+set terminal png 
+set xlabel "Cantidad de pixeles"
+set ylabel "Ciclo de Clocs (x100000)" 
+set grid
+set output 'sepia_cant_pix.png'
+set style data linespoints 
+#set autoscale x
+plot "test_sepia_tam.out" using 1:2 lt 9 lw 2.5 smooth bezier title 'Tiempo de ejecución'
