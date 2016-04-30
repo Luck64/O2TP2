@@ -284,14 +284,17 @@ addps xmm0, xmm2
 xorps xmm2, xmm2
 cvtps2dq xmm2, xmm0 ;lo convierto en integer
 
-movdqu xmm15, [saturacion]
+;movdqu xmm15, [saturacion]
 ;movdqu xmm8, xmm0
-movdqu xmm8, xmm2
-pcmpgtd xmm8, xmm15 ; xmm15 = saturacion
+;movdqu xmm8, xmm2
+;pcmpgtd xmm8, xmm15 ; xmm15 = saturacion
 ;por xmm0, xmm8
-por xmm2, xmm8
+;por xmm2, xmm8
 
 ; XMM0 = [RESULTADO|00|00|00]
+
+packusdw xmm2, xmm2
+packuswb xmm2, xmm2
 
 movdqu [rsi], xmm2
 lea rsi, [rsi + 4]
