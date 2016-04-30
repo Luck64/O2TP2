@@ -262,8 +262,8 @@ movdqu xmm6, [maximoConstante]
 
 movdqu xmm15, [mascFl]
 
-pshufb xmm0, xmm0, xmm15	;[SUMARGB|SUMARGB|SUMARGB|0]
-pshufb xmm4, xmm4, xmm15	;[ Alpha | Alpha | Alpha |0]
+pshufb xmm0, xmm15	;[SUMARGB|SUMARGB|SUMARGB|0]
+pshufb xmm4, xmm15	;[ Alpha | Alpha | Alpha |0]
 
 cvtdq2ps xmm0, xmm0 ; [SUMARGB|SUMARGB|SUMARGB|0] con floats
 cvtdq2ps xmm2, xmm2 ; [   B   |   G   |   R   |0]
