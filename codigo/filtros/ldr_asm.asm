@@ -262,9 +262,11 @@ movdqu xmm6, [maximoConstante]
 
 ; los convierto en floats
 
-;movdqu xmm15, [mascFloat]
-pshufd xmm0, 0x03	;[SUMARGB|SUMARGB|SUMARGB|0]
-pshufd xmm4, 0x03	;[ Alpha | Alpha | Alpha |0]
+movdqu xmm15, [dejarPrimero2]
+pand xmm0, xmm15
+
+pshufd xmm0, xmm0, 0x00	;[SUMARGB|SUMARGB|SUMARGB|0]
+pshufd xmm4, xmm4, 0x00	;[ Alpha | Alpha | Alpha |0]
 
 cvtdq2ps xmm0, xmm0 ; [SUMARGB|SUMARGB|SUMARGB|0] con floats
 cvtdq2ps xmm2, xmm2 ; [   B   |   G   |   R   |0]
