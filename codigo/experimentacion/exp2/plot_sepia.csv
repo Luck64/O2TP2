@@ -1,0 +1,9 @@
+#Tiempos de ejecución Cropflip
+set terminal png 
+set xlabel "Cantidad de pixeles"
+set ylabel "Ciclo de Clocs (x100000)" 
+set grid
+set output 'sepia_cant_pix.png'
+set style data linespoints 
+#set autoscale x
+plot "cropflip_c.out" using 1:2 lt 6 lw 2 pt 1 smooth bezier title 'c', "cropflip_asm.out" using 1:2 lt 9 pt 1 lw 2 smooth bezier title 'asm'
