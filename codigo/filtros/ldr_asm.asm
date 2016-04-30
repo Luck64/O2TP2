@@ -80,27 +80,27 @@ ldr_asm:
 mov rax, rdi 	;hago un save de rax, pues lo voy a modificar
 
 					     ; XMM0 = [         A         |         B         |         C         |         D         ]
-movdqu xmm0, [rdi] 		 ; XMM0 = [ B1 | G1 | R1 | A1 | B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 ]
+movdqu xmm0, [rax] 		 ; XMM0 = [ B1 | G1 | R1 | A1 | B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 ]
 
 lea rax, [rax + r8] 	 ; ahora rax apunta al inicio de la SEGUNDA fila (contando desde abajo hacia arriba)
 
 					     ; XMM2 = [         F         |         G         |         H         |         I         ]
-movdqu xmm2, [rdi] 		 ; XMM2 = [ B1 | G1 | R1 | A1 | B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 ]
+movdqu xmm2, [rax] 		 ; XMM2 = [ B1 | G1 | R1 | A1 | B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 ]
 
 lea rax, [rax + r8] 	 ; ahora rax apunta al inicio de la TERCERA fila (contando desde abajo hacia arriba)
 
 					     ; XMM4 = [         K         |         L         |         1         |         2         ]
-movdqu xmm4, [rdi] 		 ; XMM4 = [ B1 | G1 | R1 | A1 | B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 ]
+movdqu xmm4, [rax] 		 ; XMM4 = [ B1 | G1 | R1 | A1 | B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 ]
 
 lea rax, [rax + r8] 	 ; ahora rax apunta al inicio de la CUARTA fila (contando desde abajo hacia arriba)
 
 					     ; XMM6 = [         M         |         N         |         O         |         P         ]
-movdqu xmm6, [rdi] 		 ; XMM6 = [ B1 | G1 | R1 | A1 | B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 ]
+movdqu xmm6, [rax] 		 ; XMM6 = [ B1 | G1 | R1 | A1 | B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 ]
 
 lea rax, [rax + r8] 	 ; ahora rax apunta al inicio de la QUINTA fila (contando desde abajo hacia arriba)
 
 					     ; XMM8 = [         R         |         S         |         T         |         U         ]
-movdqu xmm8, [rdi] 		 ; XMM8 = [ B1 | G1 | R1 | A1 | B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 ]
+movdqu xmm8, [rax] 		 ; XMM8 = [ B1 | G1 | R1 | A1 | B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 ]
 
 ;La idea principal es que cada pixel "recicle". Es decir, cada pixel necesita 5 pixeles (por fila), para hacer eso necesita
 ;hacer dos accesos a memoria, uno para traer del primero al cuarto y otro para traer del segundo al quinto. Sin embargo,
