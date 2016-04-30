@@ -71,7 +71,7 @@ ldr_asm:
 	xor r12, r12; voy a guardar X
 	xor r13, r13; voy a guardar Y
 	mov r13, 4; tiene que empezar dos columnas despues y terminar dos filas antes
-
+	mov r12, 4
 ;vecinos:           pixeles: _ _ _ _ _ _ _ _
 ;|U|V|W|X|Y|				|R|S|T|U|V|_|_|_|
 ;|P|Q|R|S|T|				|M|N|O|P|Q|_|_|_|
@@ -232,7 +232,7 @@ phaddw xmm0, xmm0
 ; XMM0 = [SUMATOTAL|SUMATOTAL|SUMATOTAL|SUMATOTAL|SUMATOTAL|SUMATOTAL|SUMATOTAL|SUMATOTAL]
 ; (es el mismo valor 8 veces)
 
-movdqu xmm15, [dejarPrimero]
+movdqu xmm15, [dejarPrimero2]
 pand xmm0, xmm15
 
 ; XMM0 = [SUMATOTAL|00|00|00|00|00|00|00]
