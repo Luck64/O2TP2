@@ -66,9 +66,9 @@ ldr_asm:
 	add r10, 8						; R10 = R10 + 4 pixels
 	cmp r10, r12
 	je .listo
-	jmp .Copiar2PrimerasF
+	jmp .copiarDosPrimerasF
 
-	.listo
+	.listo:
 	xor r10, r10
 	xor r11, r11
 
@@ -112,7 +112,7 @@ sub rdi, 12
 	add rbx, 16
 	add rdi, 12
 
-	.cuentitas
+;	.cuentitas:
 		mov rax, rdi 	;hago un save de rax, pues lo voy a modificar
 							     ; XMM0 = [         A         |         B         |         C         |         D         ]
 		movdqu xmm0, [rax] 		 ; XMM0 = [ B1 | G1 | R1 | A1 | B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 ]
@@ -146,7 +146,7 @@ sub rdi, 12
 	jmp .cicloX
 
 .cicloX:
-.cuentitasX
+;.cuentitasX
 	mov rax, rdi
 						     ; XMM1 = [         B         |         C         |         D         |         E         ]
 	movdqu xmm1, [rax] 		 ; XMM1 = [ B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 | B5 | G5 | R5 | A5 ]
