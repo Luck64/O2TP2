@@ -14,7 +14,7 @@ dejarCuarto: db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 maximoConstante: dd 4876875.0, 4876875.0, 4876875.0, 0.0
 saturacion: db 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 mascPixel: db 0x00, 0xFF, 0xFF, 0xFF, 0x01, 0xFF, 0xFF, 0xFF, 0x02, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
-mascFloat: db 0X00, 0X01, 0x02, 0x03, 0X00, 0X01, 0x02, 0x03, 0X00, 0X01, 0x02, 0x03, 0XFF, 0xFF, 0xFF, 0XFF
+mascFl: db 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0xFF, 0xFF, 0xFF, 0xFF
 
 
 section .text
@@ -71,7 +71,7 @@ ldr_asm:
 	xor r12, r12; voy a guardar X
 	xor r13, r13; voy a guardar Y
 	mov r13, 4; tiene que empezar dos columnas despues y terminar dos filas antes
-
+	mov r12, 4
 ;vecinos:           pixeles: _ _ _ _ _ _ _ _
 ;|U|V|W|X|Y|				|R|S|T|U|V|_|_|_|
 ;|P|Q|R|S|T|				|M|N|O|P|Q|_|_|_|
@@ -232,11 +232,12 @@ phaddw xmm0, xmm0
 ; XMM0 = [SUMATOTAL|SUMATOTAL|SUMATOTAL|SUMATOTAL|SUMATOTAL|SUMATOTAL|SUMATOTAL|SUMATOTAL]
 ; (es el mismo valor 8 veces)
 
-movdqu xmm15, [dejarPrimero]
+movdqu xmm15, [dejarPrimero2]
 pand xmm0, xmm15
 
 ; XMM0 = [SUMATOTAL|00|00|00|00|00|00|00]
 
+movdqu xmm15, [dejarPrimero]
 movdqu xmm2, xmm5 ; XMM2 = [         L         |         1         |         2         |         3         ]
 				  ; XMM2 = [ B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 | B5 | G5 | R5 | A5 ]
 
@@ -260,38 +261,26 @@ movdqu xmm6, [maximoConstante]
 ; XMM4 = ALPHA
 ; XMM6 = MAX (ya es un float )
 
-; los convierto en floats
-cvtdq2ps xmm0, xmm0 ; [SUMARGB|0|0|0]
-cvtdq2ps xmm2, xmm2 ; [   B   |G|R|0]
-cvtdq2ps xmm4, xmm4 ; [ Alpha |0|0|0]
+movdqu xmm15, [mascFl]
 
-;acomodamos todos en tres DQ [XXXX|XXXX|XXXX|0000]
-
-movdqu xmm15, [mascFloat]
 pshufb xmm0, xmm15	;[SUMARGB|SUMARGB|SUMARGB|0]
 pshufb xmm4, xmm15	;[ Alpha | Alpha | Alpha |0]
 
-mulps xmm0, xmm2 ; SUMABGR*Ikij  			-> [ S*I | S*I | S*I |0]
+cvtdq2ps xmm0, xmm0 ; [SUMARGB|SUMARGB|SUMARGB|0] con floats
+cvtdq2ps xmm2, xmm2 ; [   B   |   G   |   R   |0]
+cvtdq2ps xmm4, xmm4 ; [ Alpha | Alpha | Alpha |0]
+
+mulps xmm0, xmm2 ; SUMABGR*Ikij       -> [ S*I | S*I | S*I |0]
 mulps xmm0, xmm4 ; SUMABGR*Ikij*ALPHA -> [S*I*A|S*I*A|S*I*A|0]
-;mulps xmm2, xmm6 ; Ikij*MAX						-> [B*Max|G*Max|R*Max|0]
 
-;addps xmm0, xmm2 ; Ikij*MAX + SUMABGR*Ikij*ALPHA			->	[(SIA)+(BM)|(SIA)+(GM)|(SIA)+(RM)|0]
+divps xmm0, xmm6 ; (SUMABGR*Ikij*ALPHA)/MAX	-> [SumaB/max|SumaG/Max|SumaR/Max|0/Max]
+addps xmm0, xmm2 ; Ikij + (SUMABGR*Ikij*ALPHA)/MAX -> [FINAL-B|FINAL-G|FINAL-R|0]
 
-divps xmm0, xmm6 ; (Ikij*MAX + SUMABGR*Ikij*ALPHA)/MAX	-> [SumaB/max|SumaG/Max|SumaR/Max|0/Max]
-addps xmm0, xmm2
-
-;cvtps2dq xmm0, xmm3 ;lo convierto en integer
 xorps xmm2, xmm2
 cvtps2dq xmm2, xmm0 ;lo convierto en integer
 
-movdqu xmm15, [saturacion]
-;movdqu xmm8, xmm0
-movdqu xmm8, xmm2
-pcmpgtd xmm8, xmm15 ; xmm15 = saturacion
-;por xmm0, xmm8
-por xmm2, xmm8
-
-; XMM0 = [RESULTADO|00|00|00]
+packusdw xmm2, xmm2
+packuswb xmm2, xmm2
 
 movdqu [rsi], xmm2
 lea rsi, [rsi + 4]
