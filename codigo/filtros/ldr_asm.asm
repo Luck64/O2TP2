@@ -1,13 +1,18 @@
 global ldr_asm
 
-%define NULL				0
+%define NULL 0
 %define PIXEL_SIZE	4
 
 section .data
 section .rodata
 quitarBasura: db 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-mascSuma1: db 0x00, 0xFF, 0x01, 0xFF, 0x02, 0xFF, 0xFF, 0xFF, 0x04, 0xFF, 0X05, 0XFF, 0x06, 0xFF, 0xFF, 0xFF
-mascSuma2: dq 0x08, 0xFF, 0x09, 0xFF, 0x0A, 0xFF, 0xFF, 0xFF, 0x0C, 0xFF, 0X0D, 0XFF, 0x0E, 0xFF, 0xFF, 0xFF
+mascSuma1: db 0x00, 0xFF, 0x01, 0xFF, 0x02, 0xFF, 0xFF, 0xFF, 0x04, 0xFF, 0x05, 0xFF, 0x06, 0xFF, 0xFF, 0xFF
+mascSuma2: db 0x08, 0xFF, 0x09, 0xFF, 0x0A, 0xFF, 0xFF, 0xFF, 0x0C, 0xFF, 0x0D, 0xFF, 0x0E, 0xFF, 0xFF, 0xFF
+dejarPrimero: db 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+dejarCuarto: db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0x00
+maximoConstante: dd 4876875.0, 0.0, 0.0, 0.0
+saturacion: db 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
 
 section .text
 ;void ldr_asm    (
@@ -35,167 +40,257 @@ section .text
 ;R9 = dst_row_size
 ;Pila = alpha
 ldr_asm:
-	push RBP				;Alineada
-	mov RBP, RSP		;Se crea el Stack F
-	push R12				;Desalineada
-	push R13				;Alineada
-	push R14				;Desalineada
-	push RBX				;Alineada
 
-	xor r14, r14								; R14 = iterador de pixeles
-	add r14, rcx
-	add r14, rcx
-	add r14, 2									; R14 = 2*cols + 2 (inicio)
-	xor r13, r13
-	mov r13B, [RBP + 16]				; R13 = alpha
+	push rbp	;alineada
+	mov rbp, rsp
+	push r12	;desalinada
+	push r13	;alineada
+	push rbx	;desalineada
+	push r15	;alineada
 
-.vecinos:
-	xor r10, r10								; R10 iteracion de vecinos 
-	xor r12, r12								; R12 = iterador de vecinos
-;CORREGIR	lea r12, [r14-rcx-rcx-2]		; posicion inicial de it e vecinos
-	JMP .vecinosUp
+	mov rbx, rdi	; save rdi
+	mov r12, r8		; save r8
+	add r12, r12	; duplico r12 (son dos filas)
+	xor r10, r10	; R10 = contador
+	xor r11, r11	; R11 = intermediario memoria-registro de 8 bytes
 
-.incItPixeli:
-;Corregir	CMP r14, 0												; ¿Llegue al margen derecho?
-	add r14, 4
-	JMP .vecinos 
+;Copiar primeras dos filas:
+.copiarDosPrimerasF:
+	movdqu xmm0, [rdi]
+	movdqu [rsi], xmm0
+	lea rdi, [rdi + 16]
+	lea rsi, [rsi + 16]
+	add r10, 16						; R10 = R10 + 4 pixels
+	cmp r10, r12
+	JNE .copiarDosPrimerasF
 
-.vecinosUp:
+	mov rdi, rbx
+	xor r12, r12; voy a guardar X
+	xor r13, r13; voy a guardar Y
+	mov r13, 4; tiene que empezar dos columnas despues y terminar dos filas antes
 
-	CMP r10, 5									; 5 es la cant de filas vecinas a tomar
-;CRREGIR	JE .incItPixel
-;vecinos:           pixeles:
-;|U|V|W|X|Y|				| | | | | | | | |
-;|P|Q|R|S|T|				| | | | | | | | |
-;|K|L|*|N|O|				| | |1|2|3|4| | |
-;|F|G|H|I|J|				| | | | | | | | |
-;|A|B|C|D|E|				| | | | | | | | |
-;										
-;XMM0 = A 
-;XMM0 = [    A1     |    A2     |    A3     |     A4    ]
-;XMM0 = [B1|G1|R1|a1|B2|G2|R2|a2|B3|G3|R3|a3|B4|G4|R4|a4]
-	movdqu xmm0, [rdi + PIXEL_SIZE*r12]	
-	movdqu xmm10, xmm0
-	inc r12
-;XMM1 = B
-;XMM1 = [    B1     |    B2     |    B3     |     B4    ]
-;XMM1 = [B2|G2|R2|a2|B3|G3|R3|a3|B4|G4|R4|a4|B5|G5|R5|a5]
-	movdqu xmm1, [rdi + PIXEL_SIZE*r12]
-	inc r12
-;XMM2 = C
-;XMM2 = [    C1     |    C2     |    C3     |     C4    ]
-;XMM2 = [B3|G3|R3|a3|B4|G4|R4|a4|B5|G5|R5|a5|B6|G6|R6|a6]
-	movdqu xmm2, [rdi + PIXEL_SIZE*r12]
-	inc r12
-;XMM3 = D
-;XMM3 = [    D1     |    D2     |    D3     |     D4    ]
-;XMM3 = [B4|G4|R4|a4|B5|G5|R5|a5|B6|G6|R6|a6|B7|G7|R7|a7]
-	movdqu xmm3, [rdi + PIXEL_SIZE*r12]
-	inc r12
-;XMM4 = E
-;XMM4 = [    E1     |    E2     |    E3     |     E4    ]
-;XMM4 = [B5|G5|R5|a5|B6|G6|R6|a6|B7|G7|R7|a7|B8|G8|R8|a8]
-	movdqu xmm4, [rdi + PIXEL_SIZE*r12]
-.suma:
-	movdqu xmm15, [mascSuma1]
-	
-	movdqu xmm5, xmm0
-	movdqu xmm6, xmm1
-	movdqu xmm7, xmm2
-	movdqu xmm8, xmm3
-	movdqu xmm9, xmm4
+;vecinos:           pixeles: _ _ _ _ _ _ _ _
+;|U|V|W|X|Y|				|R|S|T|U|V|_|_|_|
+;|P|Q|R|S|T|				|M|N|O|P|Q|_|_|_|
+;|K|L|*|N|O|				|K|L|1|2|3|4|_|_|
+;|F|G|H|I|J|				|F|G|H|I|J|_|_|_|
+;|A|B|C|D|E|				|A|B|C|D|E|_|_|_|
 
-;xmm0 = [A1|A2]
-	pshufb xmm0, xmm15		; [B1|00|G1|00|R1|00|00|00|B2|00|G2|00|R2|00|00|00]
-;xmm1 = [B1|B2]
-	pshufb xmm1, xmm15		; [B2|00|G2|00|R2|00|00|00|B3|00|G3|00|R3|00|00|00]
-;xmm2 = [C1|C2]
-	pshufb xmm2, xmm15		; [B3|00|G3|00|R3|00|00|00|B4|00|G4|00|R4|00|00|00]
-;xmm3 = [D1|D2]
-	pshufb xmm3, xmm15		; [B4|00|G4|00|R4|00|00|00|B5|00|G5|00|R5|00|00|00]
-;xmm4 = [E1|E2]
-	pshufb xmm4, xmm15		; [B5|00|G5|00|R5|00|00|00|B6|00|G6|00|R6|00|00|00]
 
-	movdqu xmm15, [mascSuma2]
-;xmm5 = [A3|A4]
-	pshufb xmm5, xmm15		; [B3|00|G3|00|R3|00|00|00|B4|00|G4|00|R4|00|00|00]
-;xmm6 = [B3|B4]
-	pshufb xmm6, xmm15		; [B4|00|G4|00|R4|00|00|00|B5|00|G5|00|R5|00|00|00]
-;xmm7 = [C3|C4]
-	pshufb xmm7, xmm15		; [B5|00|G5|00|R5|00|00|00|B6|00|G6|00|R6|00|00|00]
-;xmm8 = [D3|D4]
-	pshufb xmm8, xmm15		; [B6|00|G6|00|R6|00|00|00|B7|00|G7|00|R7|00|00|00]
-;xmm9 = [E3|E4]
-	pshufb xmm9, xmm15		; [B7|00|G7|00|R7|00|00|00|B8|00|G8|00|R8|00|00|00]
-	
-; --SUMA PiXELES--
-; XMM0 = [A1+B1+C1+D1+E1 | A2+B2+C2+D2+E2]
-; XMM0 = [Sb1|Sg1|Sr1|0|Sb2|Sg2|Sr2|0]
-	paddd xmm0, xmm1
-	paddd xmm0, xmm2
-	paddd xmm0, xmm3
-	paddd xmm0, xmm4
+mov rax, rdi 	;hago un save de rax, pues lo voy a modificar
 
-; XMM5 = [A3+B3+C3+D3+E3 | A4+B4+C4+D4+E4]
-; XMM5 = [Sb3|Sg3|Sr3|0|Sb4|Sg4|Sr4|0]
-	paddd xmm5, xmm6
-	paddd xmm5, xmm7
-	paddd xmm5, xmm8
-	paddd xmm5, xmm9
+					     ; XMM0 = [         A         |         B         |         C         |         D         ]
+movdqu xmm0, [rdi] 		 ; XMM0 = [ B1 | G1 | R1 | A1 | B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 ]
 
-; --SUMA COLORES--
-	
-; XMM0 = [Sumargb1|Sumargb2]
-	movdqu xmm1, xmm0		; XMM0 = [Sb1|Sg1|Sr1| 0 |Sb2|Sg2|Sr2| 0 ]
-	pslldq xmm1, 2			; XMM1 = [Sg1|Sr1| 0 |Sb2|Sg2|Sr2| 0 | 0 ]
-	movdqu xmm2, xmm1
-	pslldq xmm2,2				; XMM2 = [Sr1| 0 |Sb2|Sg2|Sr2| 0 | 0 | 0 ]
-	movdqu xmm15, [quitarBasura]
-	pand xmm0, xmm15		; XMM0 = [Sb1| 0 | 0 | 0 |Sb2| 0 | 0 | 0 ]
-	pand xmm1, xmm15		; XMM1 = [Sg1| 0 | 0 | 0 |Sg2| 0 | 0 | 0 ]
-	pand xmm2, xmm15		; XMM2 = [Sr1| 0 | 0 | 0 |Sr2| 0 | 0 | 0 ]
-	;suma:
-	paddd xmm0, xmm1		; XMM0 = [Sumargb1|0|Sumargb2|0] 
-	paddd xmm0, xmm2
+lea rax, [rax + r8] 	 ; ahora rax apunta al inicio de la SEGUNDA fila (contando desde abajo hacia arriba)
 
-; XMM5 = [Sumargb3|Sumargb4]
-	movdqu xmm6, xmm5		; XMM5 = [Sb3|Sg3|Sr3| 0 |Sb4|Sg4|Sr4| 0 ]
-	pslldq xmm6, 2			; XMM6 = [Sg3|Sr3| 0 |Sb4|Sg4|Sr4| 0 | 0 ]
-	movdqu xmm7, xmm6
-	pslldq xmm7,2				; XMM7 = [Sr3| 0 |Sb4|Sg4|Sr4| 0 | 0 | 0 ]
-	paddd xmm5, xmm15		; XMM5 = [Sb3| 0 | 0 | 0 |Sb4| 0 | 0 | 0 ]
-	paddd xmm6, xmm15		; XMM6 = [Sg3| 0 | 0 | 0 |Sg4| 0 | 0 | 0 ]
-	paddd xmm7, xmm15		; XMM7 = [Sr3| 0 | 0 | 0 |Sr4| 0 | 0 | 0 ]
-	; suma:
-	paddd xmm5, xmm6		; XMM5 = [Sumargb3|0|Sumargb4|0]
-	paddd xmm5, xmm7
-	
-; XMM5 = [Sumargb1|Sumargb3|Sumargb2|Sumargb4]
-	psrldq xmm5,4
-	pand xmm5, xmm0
-	
-;Sube una fila el indice
-	lea r12, [r12 + rcx - 4]
-	inc r10 
-	JMP .vecinosUp
-;convertir: 
-;shit derecho y pand para pasar todo a un registro
-; -- Convertir a float --
-	cvtps2dq xmm1, xmm0
-	cvtps2dq xmm2, xmm5
+					     ; XMM2 = [         F         |         G         |         H         |         I         ]
+movdqu xmm2, [rdi] 		 ; XMM2 = [ B1 | G1 | R1 | A1 | B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 ]
 
-.multiplicacion:
-; --alpha--
-	xorps xmm0, xmm0
-	pinsrb xmm0, R13B, 0
-	pinsrb xmm0, R13B, 8
-	cvtps2dq xmm3, xmm0			; XMM3 = [alpha|0|alpha|0]
-; --pixel--
-;usar backup xmm10, xmm11,xmm12,xmm13,xmm14	
+lea rax, [rax + r8] 	 ; ahora rax apunta al inicio de la TERCERA fila (contando desde abajo hacia arriba)
 
-.fin:
-	pop R12
-	pop RBX
-	pop RBP
+					     ; XMM4 = [         K         |         L         |         1         |         2         ]
+movdqu xmm4, [rdi] 		 ; XMM4 = [ B1 | G1 | R1 | A1 | B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 ]
+
+lea rax, [rax + r8] 	 ; ahora rax apunta al inicio de la CUARTA fila (contando desde abajo hacia arriba)
+
+					     ; XMM6 = [         M         |         N         |         O         |         P         ]
+movdqu xmm6, [rdi] 		 ; XMM6 = [ B1 | G1 | R1 | A1 | B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 ]
+
+lea rax, [rax + r8] 	 ; ahora rax apunta al inicio de la QUINTA fila (contando desde abajo hacia arriba)
+
+					     ; XMM8 = [         R         |         S         |         T         |         U         ]
+movdqu xmm8, [rdi] 		 ; XMM8 = [ B1 | G1 | R1 | A1 | B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 ]
+
+;La idea principal es que cada pixel "recicle". Es decir, cada pixel necesita 5 pixeles (por fila), para hacer eso necesita
+;hacer dos accesos a memoria, uno para traer del primero al cuarto y otro para traer del segundo al quinto. Sin embargo,
+;el siguiente pixel va a necesitar hacer lo mismo, traer de memoria del primero al cuarto y despues del segundo al quinto
+;pero "del primero al cuarto" del segundo pixel es lo mismo que "del segundo al quinto" del primero. Entonces el pixel, una
+;vez que hizo sus accesos, le puede dejar en xmm0, xmm2, xmm4, xmm6 y xmm0 la segunda tanda de pixeles que tuvo recolecto
+;(es decir, "del segundo al quinto"), el siguiente pixel ya va a tener la mitad de los accesos a memoria hechos, ahora solo
+;necesita conseguir sus pixeles "del segundo al quinto" (que se los va a dejar al siguiente pixel en los registros xmm(Pares)
+;asi sabe donde encontrarlos). Un ejemplo facil: la funcion inicia recolectando ABCD, FGHI, KL12, MNOP y RSTU y los deja en 
+;los registros xmm0, xmm2, xmm4, xmm6 y xmm8 respetivamente. Inicia el ciclo para el pixel 1, ahi va a recolectar BCDE, GHIJ,
+;L123, NOPQ y STUV en los registros xmm1, xmm3, xmm5, xmm7 y xmm9 respectivamente. Cuando termine de hacer todas las operaciones,
+;va a dejar en los registros xmm0, xmm2, xmm4, xmm6 y xmm8 lo que levanto de memoria en los registros xmm1, xmm3, xmm5, xmm7 y xmm9
+;se itera asi sucesivamente. Por cada pixel se hacen 5 accesos a memoria + el acceso "incial" que hay que hacer al principio de
+;cada fila.
+;Esto quiere decir que si la imagen es ancha y baja va a trabajar mejor. Sin embargo, si es alta y angosta va a tener que hacer mas
+;accesos a memoria por menos pixeles. EXPERIMENTO!
+
+;xmm(Pares) = xmm0, xmm2, xmm4, xmm6 y xmm8
+
+lea rdi, [rdi+4]		; rdi ++
+jmp .cicloX
+
+.cicloY:
+xor r12, r12
+mov r12, 4 ;el contador de X empieza con 4 porque los primeros dos pixeles y los dos ultimos no tienen que figurar en la cuenta
+add r13, 1
+cmp r13, rcx
+je .terminar
+lea rdi, [rdi+16] ;que saltee los ultimos 2 pixeles de la fila actual y los dos primeros de la siguiente fila 
+jmp .cicloX
+
+.cicloX:
+mov rax, rdi
+
+					     ; XMM1 = [         B         |         C         |         D         |         E         ]
+movdqu xmm1, [rax] 		 ; XMM1 = [ B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 | B5 | G5 | R5 | A5 ]
+
+lea rax, [rax + r8] 	 ; ahora rax apunta al inicio de la SEGUNDA fila (contando desde abajo hacia arriba)
+
+					     ; XMM3 = [         G         |         H         |         I         |         F         ]
+movdqu xmm3, [rax] 		 ; XMM3 = [ B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 | B5 | G5 | R5 | A5 ]
+
+lea rax, [rax + r8] 	 ; ahora rax apunta al inicio de la TERCERA fila (contando desde abajo hacia arriba)
+
+					     ; XMM5 = [         L         |         1         |         2         |         3         ]
+movdqu xmm5, [rax] 		 ; XMM5 = [ B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 | B5 | G5 | R5 | A5 ]
+
+lea rax, [rax + r8] 	 ; ahora rax apunta al inicio de la CUARTA fila (contando desde abajo hacia arriba)
+
+					     ; XMM7 = [         N         |         O         |         P         |         V         ]
+movdqu xmm7, [rax] 		 ; XMM7 = [ B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 | B5 | G5 | R5 | A5 ]
+
+lea rax, [rax + r8] 	 ; ahora rax apunta al inicio de la QUINTA fila (contando desde abajo hacia arriba)
+
+					     ; XMM9 = [         S         |         T         |         U         |         V         ]
+movdqu xmm9, [rax] 		 ; XMM9 = [ B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 | B5 | G5 | R5 | A5 ]
+
+;voy a cuidar de no modificar los xmm(noPares) asi al terminar los paso a los xmm(Pares)
+
+;hago la suma:
+movdqu xmm15, [mascSuma1]
+movdqu xmm10, xmm0
+movdqu xmm11, xmm2
+movdqu xmm12, xmm4
+movdqu xmm13, xmm6
+movdqu xmm14, xmm8
+
+pshufb xmm0, xmm15 ; [B1|00|G1|00|R1|00|00|00|B2|00|G2|00|R2|00|00|00]
+pshufb xmm2, xmm15 ; [B1|00|G1|00|R1|00|00|00|B2|00|G2|00|R2|00|00|00]
+pshufb xmm4, xmm15 ; [B1|00|G1|00|R1|00|00|00|B2|00|G2|00|R2|00|00|00]
+pshufb xmm6, xmm15 ; [B1|00|G1|00|R1|00|00|00|B2|00|G2|00|R2|00|00|00]
+pshufb xmm8, xmm15 ; [B1|00|G1|00|R1|00|00|00|B2|00|G2|00|R2|00|00|00]
+
+movdqu xmm15, [mascSuma2]
+pshufb xmm10, xmm15		; [B3|00|G3|00|R3|00|00|00|B4|00|G4|00|R4|00|00|00]
+pshufb xmm11, xmm15		; [B3|00|G3|00|R3|00|00|00|B4|00|G4|00|R4|00|00|00]
+pshufb xmm12, xmm15		; [B3|00|G3|00|R3|00|00|00|B4|00|G4|00|R4|00|00|00]
+pshufb xmm13, xmm15		; [B3|00|G3|00|R3|00|00|00|B4|00|G4|00|R4|00|00|00]
+pshufb xmm14, xmm15		; [B3|00|G3|00|R3|00|00|00|B4|00|G4|00|R4|00|00|00]
+
+paddw xmm0, xmm2
+paddw xmm0, xmm4
+paddw xmm0, xmm6
+paddw xmm0, xmm8
+paddw xmm0, xmm10
+paddw xmm0, xmm11
+paddw xmm0, xmm12
+paddw xmm0, xmm13
+paddw xmm0, xmm14
+
+;me falta sumar lo que seria E, J, 3, Q, V
+
+movdqu xmm10, xmm1
+movdqu xmm11, xmm3
+movdqu xmm12, xmm5
+movdqu xmm13, xmm7
+movdqu xmm14, xmm9
+
+movdqu xmm15, [dejarCuarto]
+pand xmm10, xmm15
+pand xmm11, xmm15
+pand xmm12, xmm15
+pand xmm13, xmm15
+pand xmm14, xmm15
+
+movdqu xmm15, [mascSuma2]
+pshufb xmm10, xmm15		; [00|00|00|00|00|00|00|00|B5|00|G5|00|R5|00|00|00]
+pshufb xmm11, xmm15		; [00|00|00|00|00|00|00|00|B5|00|G5|00|R5|00|00|00]
+pshufb xmm12, xmm15		; [00|00|00|00|00|00|00|00|B5|00|G5|00|R5|00|00|00]
+pshufb xmm13, xmm15		; [00|00|00|00|00|00|00|00|B5|00|G5|00|R5|00|00|00]
+pshufb xmm14, xmm15		; [00|00|00|00|00|00|00|00|B5|00|G5|00|R5|00|00|00]
+
+paddw xmm0, xmm10
+paddw xmm0, xmm11
+paddw xmm0, xmm12
+paddw xmm0, xmm13
+paddw xmm0, xmm14
+
+; XMM0 = [SB1|SG1|SR1|000|SB2|SG2|SR2|000]
+; ahora tengo que sumar las sumas parciales
+
+phaddw xmm0, xmm0
+phaddw xmm0, xmm0
+phaddw xmm0, xmm0
+
+; XMM0 = [SUMATOTAL|SUMATOTAL|SUMATOTAL|SUMATOTAL|SUMATOTAL|SUMATOTAL|SUMATOTAL|SUMATOTAL]
+; (es el mismo valor 8 veces)
+
+movdqu xmm15, [dejarPrimero]
+pand xmm0, xmm15
+
+; XMM0 = [SUMATOTAL|00|00|00|00|00|00|00]
+
+movdqu xmm2, xmm1 ; XMM2 = [         L         |         1         |         2         |         3         ]
+				  ; XMM2 = [ B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 | B5 | G5 | R5 | A5 ]
+
+psrldq xmm2, 4    
+				  ; XMM2 = [         1         |         0         |         0         |         0         ]
+pand xmm2, xmm15  ; XMM2 = [ B3 | G3 | R3 | A3 | 00 | 00 | 00 | 00 | 00 | 00 | 00 | 00 | 00 | 00 | 00 | 00 ]
+
+; XMM2 = [PIXELACTUAL|00|00|00]
+
+por xmm4, xmm4
+movq xmm4, [RBP + 16]; xmm4 = alpha ?????
+
+movdqu xmm6, [maximoConstante]
+
+; XMM0 = SUMABGR
+; XMM2 = Ikij
+; XMM4 = ALPHA
+; XMM6 = MAX (ya es un float )
+
+cvtdq2ps xmm0, xmm0 ; los convierto en floats
+cvtdq2ps xmm2, xmm2
+cvtdq2ps xmm4, xmm4
+
+mulps xmm0, xmm2 ; SUMABGR*Ikij
+mulps xmm0, xmm4 ; SUMABGR*Ikij*ALPHA
+mulps xmm2, xmm6 ; Ikij*MAX
+
+addps xmm0, xmm2 ; Ikij*MAX + SUMABGR*Ikij*ALPHA
+
+divps xmm0, xmm6 ; (Ikij*MAX + SUMABGR*Ikij*ALPHA)/MAX
+
+cvtps2dq xmm0, xmm3 ;lo convierto en integer
+
+movdqu xmm15, [saturacion]
+movdqu xmm8, xmm0
+pcmpgtd xmm8, xmm15 ; xmm15 = saturacion
+por xmm0, xmm8
+
+; XMM0 = [RESULTADO|00|00|00]
+
+movd [rsi], xmm0
+lea rsi, [rsi + 4]
+lea rdi, [rdi + 4]
+add r12, 4
+movdqu xmm0, xmm1
+movdqu xmm2, xmm3
+movdqu xmm4, xmm5
+movdqu xmm6, xmm7
+movdqu xmm8, xmm9
+cmp r12, rdx ; comparo para ver si ya termine esta fila
+je .cicloY
+jmp .cicloX
+
+.terminar:
+	pop r15
+	pop rbx
+	pop r13
+	pop r12
+	pop rbp
 	ret
- 
