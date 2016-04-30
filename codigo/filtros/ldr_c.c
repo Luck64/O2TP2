@@ -29,59 +29,27 @@ void ldr_c    (
             bgra_t *p_d = (bgra_t*) &dst_matrix[i][j*4];
             bgra_t *p_s = (bgra_t*) &src_matrix[i][j*4];
             *p_d = *p_s;
-						
-					int suma_r = (int)((bgra_t*) &src_matrix[i-2][(j-2)*4])->r - (int)((bgra_t*) &src_matrix[i-2][(j-1)*4])->r - 
-								(int)((bgra_t*) &src_matrix[i-2][(j*4)])->r - (int)((bgra_t*) &src_matrix[i-2][(j+1)*4])->r - 
-								(int)((bgra_t*) &src_matrix[i-2][(j+2)*4])->r - (int)((bgra_t*) &src_matrix[i-1][(j-2)*4])->r	- 
-								(int)((bgra_t*) &src_matrix[i-1][(j-1)*4])->r - (int)((bgra_t*) &src_matrix[i-1][(j*4)])->r 	-
-								(int)((bgra_t*) &src_matrix[i-1][(j+1)*4])->r - (int)((bgra_t*) &src_matrix[i-1][(j+2)*4])->r 	-
-								(int)((bgra_t*) &src_matrix[i][(j-2)*4])->r 	- (int)((bgra_t*) &src_matrix[i][(j-1)*4])->r	 	-
-								(int)((bgra_t*) &src_matrix[i][(j*4)])->r - (int)((bgra_t*) &src_matrix[i][(j+1)*4])->r		-
-								(int)((bgra_t*) &src_matrix[i][(j+2)*4])->r - (int)((bgra_t*) &src_matrix[i+1][(j-2)*4])->r - 
-								(int)((bgra_t*) &src_matrix[i+1][(j-1)*4])->r - (int)((bgra_t*) &src_matrix[i+1][(j*4)])->r - 
-								(int)((bgra_t*) &src_matrix[i+1][(j+1)*4])->r - (int)((bgra_t*) &src_matrix[i+1][(j+2)*4])->r - 
-								(int)((bgra_t*) &src_matrix[i+2][(j-2)*4])->r - (int)((bgra_t*) &src_matrix[i+2][(j-1)*4])->r - 
-								(int)((bgra_t*) &src_matrix[i+2][(j*4)])->r - (int)((bgra_t*) &src_matrix[i+2][(j+1)*4])->r - 
-								(int)((bgra_t*) &src_matrix[i+2][(j+2)*4])->r;
-					int suma_g = (int)((bgra_t*) &src_matrix[i-2][(j-2)*4])->g- (int)((bgra_t*) &src_matrix[i-2][(j-1)*4])->g- 
-								(int)((bgra_t*) &src_matrix[i-2][(j*4)])->g- (int)((bgra_t*) &src_matrix[i-2][(j+1)*4])->g- 
-								(int)((bgra_t*) &src_matrix[i-2][(j+2)*4])->g- (int)((bgra_t*) &src_matrix[i-1][(j-2)*4])->g	- 
-								(int)((bgra_t*) &src_matrix[i-1][(j-1)*4])->g- (int)((bgra_t*) &src_matrix[i-1][(j*4)])->g	-
-								(int)((bgra_t*) &src_matrix[i-1][(j+1)*4])->g- (int)((bgra_t*) &src_matrix[i-1][(j+2)*4])->g	-
-								(int)((bgra_t*) &src_matrix[i][(j-2)*4])->g	- (int)((bgra_t*) &src_matrix[i][(j-1)*4])->g	 	-
-								(int)((bgra_t*) &src_matrix[i][(j*4)])->g- (int)((bgra_t*) &src_matrix[i][(j+1)*4])->g		-
-								(int)((bgra_t*) &src_matrix[i][(j+2)*4])->g- (int)((bgra_t*) &src_matrix[i+1][(j-2)*4])->g- 
-								(int)((bgra_t*) &src_matrix[i+1][(j-1)*4])->g- (int)((bgra_t*) &src_matrix[i+1][(j*4)])->g- 
-								(int)((bgra_t*) &src_matrix[i+1][(j+1)*4])->g- (int)((bgra_t*) &src_matrix[i+1][(j+2)*4])->g- 
-								(int)((bgra_t*) &src_matrix[i+2][(j-2)*4])->g- (int)((bgra_t*) &src_matrix[i+2][(j-1)*4])->g- 
-								(int)((bgra_t*) &src_matrix[i+2][(j*4)])->g- (int)((bgra_t*) &src_matrix[i+2][(j+1)*4])->g- 
-								(int)((bgra_t*) &src_matrix[i+2][(j+2)*4])->g;
-					int suma_b = (int)((bgra_t*) &src_matrix[i-2][(j-2)*4])->b- (int)((bgra_t*) &src_matrix[i-2][(j-1)*4])->b- 
-								(int)((bgra_t*) &src_matrix[i-2][(j*4)])->b- (int)((bgra_t*) &src_matrix[i-2][(j+1)*4])->b- 
-								(int)((bgra_t*) &src_matrix[i-2][(j+2)*4])->b- (int)((bgra_t*) &src_matrix[i-1][(j-2)*4])->b	- 
-								(int)((bgra_t*) &src_matrix[i-1][(j-1)*4])->b- (int)((bgra_t*) &src_matrix[i-1][(j*4)])->b	-
-								(int)((bgra_t*) &src_matrix[i-1][(j+1)*4])->b- (int)((bgra_t*) &src_matrix[i-1][(j+2)*4])->b	-
-								(int)((bgra_t*) &src_matrix[i][(j-2)*4])->b	- (int)((bgra_t*) &src_matrix[i][(j-1)*4])->b	 	-
-								(int)((bgra_t*) &src_matrix[i][(j*4)])->b- (int)((bgra_t*) &src_matrix[i][(j+1)*4])->b		-
-								(int)((bgra_t*) &src_matrix[i][(j+2)*4])->b- (int)((bgra_t*) &src_matrix[i+1][(j-2)*4])->b- 
-								(int)((bgra_t*) &src_matrix[i+1][(j-1)*4])->b- (int)((bgra_t*) &src_matrix[i+1][(j*4)])->b- 
-								(int)((bgra_t*) &src_matrix[i+1][(j+1)*4])->b- (int)((bgra_t*) &src_matrix[i+1][(j+2)*4])->b- 
-								(int)((bgra_t*) &src_matrix[i+2][(j-2)*4])->b- (int)((bgra_t*) &src_matrix[i+2][(j-1)*4])->b- 
-								(int)((bgra_t*) &src_matrix[i+2][(j*4)])->b- (int)((bgra_t*) &src_matrix[i+2][(j+1)*4])->b- 
-								(int)((bgra_t*) &src_matrix[i+2][(j+2)*4])->b;
 
-					int sumargb = suma_r - suma_g - suma_b;
+            int sumargb = 0;
 
-						float r = (float)alpha * (float)sumargb * (float)p_s->r;
-		 				float g = (float)alpha * (float)sumargb * (float)p_s->g;
-						float b = (float)alpha * (float)sumargb * (float)p_s->b;
-						r = r/max; 
-						g = g/max;
-						b = b/max;
-						
-						p_d->r = (unsigned char)MIN(MAX((float)p_s->r + r,(float)0),(float)255); 
-						p_d->g = (unsigned char)MIN(MAX((float)p_s->g + g,(float)0),(float)255); 
-						p_d->b = (unsigned char)MIN(MAX((float)p_s->b + b,(float)0),(float)255); 
+            for (int k=-2; k<3; k++){
+            	for (int m=-2; m<3; m++){
+            		sumargb = sumargb + (int)((bgra_t*) &src_matrix[i+k][(j+m)*4])->r;
+            		sumargb = sumargb + (int)((bgra_t*) &src_matrix[i+k][(j+m)*4])->g;
+            		sumargb = sumargb + (int)((bgra_t*) &src_matrix[i+k][(j+m)*4])->b;
+            	}
+            }
+
+			float r = (float)alpha * (float)sumargb * (float)p_s->r;
+			float g = (float)alpha * (float)sumargb * (float)p_s->g;
+			float b = (float)alpha * (float)sumargb * (float)p_s->b;
+			r = r/max; 
+			g = g/max;
+			b = b/max;
+			
+			p_d->r = (unsigned char)MIN(MAX((float)p_s->r + r,(float)0),(float)255); 
+			p_d->g = (unsigned char)MIN(MAX((float)p_s->g + g,(float)0),(float)255); 
+			p_d->b = (unsigned char)MIN(MAX((float)p_s->b + b,(float)0),(float)255); 
 							
 								
         }
