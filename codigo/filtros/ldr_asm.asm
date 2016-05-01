@@ -76,7 +76,7 @@ ldr_asm:
 
 	xor r12, r12; voy a guardar X
 	xor r13, r13; voy a guardar Y
-	add r13, 4
+	add r13, 3
 
 
 
