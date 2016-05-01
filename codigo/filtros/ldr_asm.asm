@@ -140,9 +140,9 @@ sub rdi, 12
 	xor r12, r12
 	mov r12, 4 ;el contador de X empieza con 4 porque los primeros dos pixeles y los dos ultimos no tienen que figurar en la cuenta
 	add r13, 1
+	add rdi, 4
 	cmp r13, rdx
 	je .terminar
-	lea rdi, [rdi+16] ;que saltee los ultimos 2 pixeles de la fila actual y los dos primeros de la siguiente fila 
 	jmp .cicloX
 
 .cicloX:
