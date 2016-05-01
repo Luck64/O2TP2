@@ -15,6 +15,8 @@ maximoConstante: dd 4876875.0, 4876875.0, 4876875.0, 0.0
 saturacion: db 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 mascPixel: db 0x00, 0xFF, 0xFF, 0xFF, 0x01, 0xFF, 0xFF, 0xFF, 0x02, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
 mascFl: db 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x02, 0x03, 0xFF, 0xFF, 0xFF, 0xFF
+empaquetar: db 0x00, 0x04, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+dejarAlpha: db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 
 section .text
@@ -288,13 +290,32 @@ sub rdi, 12
 
 	xorps xmm2, xmm2
 	cvtps2dq xmm2, xmm0 ;lo convierto en integer
+					    ; XMM2 = [ FINAL-B | FINAL-G | FINAL-R | 000 ]
 
-	packusdw xmm2, xmm2
-	packuswb xmm2, xmm2
+;	packusdw xmm2, xmm2
+;	packuswb xmm2, xmm2
+
+	movdqu xmm15, [saturacion]
+	movdqu xmm6, xmm2
+	pcmpgtd xmm6, xmm15
+	por xmm2, xmm6
+	pand xmm2, xmm15 	; XMM2 = [ B1 | 00 | 00 | 00 | G1 | 00 | 00 | 00 | R1 | 00 | 00 | 00 | 00 | 00 | 00 | 00 ]
+
+	movdqu xmm15, [empaquetar]
+	pshufb xmm2, xmm15	; XMM2 = [ B1 | G1 | R1 | 00 | 00 | 00 | 00 | 00 | 00 | 00 | 00 | 00 | 00 | 00 | 00 | 00 ]
+
+	movdqu xmm15, xmm5 	; XMM15 = [         L         |         1         |         2         |         3         ]
+						; XMM15 = [ B2 | G2 | R2 | A2 | B3 | G3 | R3 | A3 | B4 | G4 | R4 | A4 | B5 | G5 | R5 | A5 ]
+	
+	movdqu xmm14, [dejarAlpha]
+	pand xmm15, xmm14
+	psrldq xmm15, 4
+	por xmm2, xmm15
 
 movdqu [rsi], xmm2
 lea rsi, [rsi + 4]
 lea rdi, [rdi + 4]
+lea rbx, [rbx + 4]
 add r12, 1
 movdqu xmm0, xmm1
 movdqu xmm2, xmm3
