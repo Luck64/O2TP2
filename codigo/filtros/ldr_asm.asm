@@ -53,6 +53,10 @@ ldr_asm:
 	push rbx	;desalineada
 	push r15	;alineada
 
+	mov r10, rdx ;swap de filas y columnas
+	mov rdx, rcx
+	mov rcx, r10
+
 	mov rbx, rdi	; save rdi
 	mov r12, r8		; save r8
 	add r12, r12	; duplico r12 (son dos filas)
