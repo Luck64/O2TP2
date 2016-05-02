@@ -1,0 +1,12 @@
+#Sepia - C vs ASM
+set terminal png 
+#set title "Sepia"
+set xlabel "Cantidad de pixeles"
+set ylabel "Ciclo de Clocs" 
+set grid
+set logscale x 2
+set format x '2^{%L}'
+set output 'sepiaCvsASM.png'
+set style data linespoints 
+set key under box
+plot "sepia_c.out" using 1:2 lt 5 lw 2 smooth bezier title 'C', "sepia_asm.out" using 1:2 lt 4 lw 2 smooth bezier title 'ASM'

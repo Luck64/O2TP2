@@ -1,0 +1,12 @@
+#Cropflip - C vs ASM
+set terminal png 
+#set title "Cropflip"
+set xlabel "Cantidad de pixeles"
+set ylabel "Ciclo de Clocs" 
+set grid
+set logscale x 2
+set format x '2^{%L}'
+set output 'cropflipCvsASM.png'
+set style data linespoints 
+set key under box
+plot "cropflip_c.out" using 1:2 lt 1 lw 2 smooth bezier title 'C', "cropflip_asm.out" using 1:2 lt 3 lw 2 smooth bezier title 'ASM'

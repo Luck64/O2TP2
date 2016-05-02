@@ -1,0 +1,12 @@
+#Optimizacion del compilador - Cropflip
+set terminal png 
+#set title "Cropflip"
+set xlabel "Cantidad de pixeles"
+set ylabel "Ciclo de Clocs" 
+set grid
+set logscale x 2
+set format x '2^{%L}'
+set output 'cropflipOptimizacion.png'
+set style data linespoints 
+set key under box
+plot "cropflip_cO0.out" using 1:2 lt 1 lw 2 smooth bezier title '-O0', "cropflip_cO3.out" using 1:2 lt 3 lw 2 smooth bezier title '-O3'

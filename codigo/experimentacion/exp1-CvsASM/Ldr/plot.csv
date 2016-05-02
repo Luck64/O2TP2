@@ -1,0 +1,12 @@
+#LDR- C vs ASM
+set terminal png 
+#set title "LDR"
+set xlabel "Cantidad de pixeles"
+set ylabel "Ciclo de Clocs" 
+set grid
+set logscale x 2
+set format x '2^{%L}'
+set output 'ldrCvsASM.png'
+set style data linespoints 
+set key under box
+plot "ldr_c.out" using 1:2 lt 10 lw 2 smooth bezier title 'C', "ldr_asm.out" using 1:2 lt 9 lw 2 smooth bezier title 'ASM'

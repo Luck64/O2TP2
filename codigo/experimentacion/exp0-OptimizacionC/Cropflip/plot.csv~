@@ -1,0 +1,10 @@
+#Cropflip - Optimización GCC
+set terminal png 
+set output 'cropflip_optimizacionC.png'
+set title "Optimizacion C"
+set style data histogram
+set xtics rotate out
+set style fill solid border
+set style histogram clustered
+plot for [COL=2:4] 'c.out' using COL:xticlabels(1) title columnheader
+
