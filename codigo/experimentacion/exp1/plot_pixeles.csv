@@ -1,9 +1,0 @@
-#Tiempos de ejecución Sepia
-set terminal png 
-set xlabel "Cantidad de pixeles"
-set ylabel "Ciclo de Clocs (x100000)" 
-set grid
-set output 'sepia_cant_pix.png'
-set style data linespoints 
-#set autoscale x
-plot "sepia_c.out" using 1:2 lt 6 lw 2 pt 1 smooth bezier title 'c', "sepia_asm.out" using 1:2 lt 9 pt 1 lw 2 smooth bezier title 'asm', "sepia_better.out" using 1:2 lt 15 pt 1 lw 3 smooth bezier title 'asm mejor', "sepia_best.out" using 1:2 lt 16 pt 1 lw 0.5 smooth bezier title 'asm best'
