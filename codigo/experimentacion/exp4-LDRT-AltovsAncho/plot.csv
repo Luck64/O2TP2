@@ -1,0 +1,9 @@
+#LDR - Imagen Alta vs Ancha
+set terminal png 
+set output 'ldrtam.png'
+set style data histogram
+set xtics norotate nomirror
+set key under box
+set style fill solid border -1
+set style histogram clustered
+plot for [COL=2:3] 'ldr.out' using COL:xticlabels(1) title columnheader
